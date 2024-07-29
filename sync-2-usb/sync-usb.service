@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync USB Data to perso (Desktop directory)
+Requires=media-linux-DATA.mount
+After=media-linux-DATA.mount
+
+[Service]
+User=linux
+Group=linux
+ExecStart=/usr/bin/bash /home/linux/apps/linux-script/synchro-unison.sh
+
+[Install]
+WantedBy=media-linux-DATA.mount
