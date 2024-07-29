@@ -1,0 +1,81 @@
+# udev usb whitelist rules
+
+# skip
+SUBSYSTEM!="usb", GOTO="wl_end"
+ACTION!="add", GOTO="wl_end"
+
+# skip hubs
+ATTR{bDeviceClass}=="09", GOTO="wl_end"
+
+#===========
+# whitelist
+#===========
+
+ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0003", ATTRS{bcdDevice}=="0504", ATTRS{configuration}=="", ATTRS{product}=="xHCI Host Controller", ENV{ID_USB_INTERFACES}==":090000:", GOTO="wl_end"
+ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0002", ATTRS{bcdDevice}=="0504", ATTRS{configuration}=="", ATTRS{product}=="xHCI Host Controller", ENV{ID_USB_INTERFACES}==":090000:", GOTO="wl_end"
+ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0003", ATTRS{bcdDevice}=="0504", ATTRS{configuration}=="", ATTRS{product}=="xHCI Host Controller", ENV{ID_USB_INTERFACES}==":090000:", GOTO="wl_end"
+ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0002", ATTRS{bcdDevice}=="0504", ATTRS{configuration}=="", ATTRS{product}=="xHCI Host Controller", ENV{ID_USB_INTERFACES}==":090000:", GOTO="wl_end"
+
+#============
+# PERSONAL USB
+#============
+ATTRS{idVendor}=="1234", ATTRS{idProduct}=="0fff", ATTRS{bcdDevice}=="0100", ATTRS{configuration}=="", ATTRS{product}=="USB DISK", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+ATTRS{idVendor}=="0781", ATTRS{idProduct}=="5591", ATTRS{bcdDevice}=="0100", ATTRS{configuration}=="", ATTRS{product}=="Ultra USB 3.0", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+ATTRS{idVendor}=="0781", ATTRS{idProduct}=="5583", ATTRS{bcdDevice}=="0100", ATTRS{configuration}=="", ATTRS{product}=="Ultra Fit", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+ATTRS{idVendor}=="0951", ATTRS{idProduct}=="1666", ATTRS{bcdDevice}=="0001", ATTRS{configuration}=="", ATTRS{product}=="DataTraveler 3.0", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+
+#============
+# Personal Card Reader
+#============
+ATTRS{idVendor}=="8564", ATTRS{idProduct}=="4000", ATTRS{bcdDevice}=="1129", ATTRS{configuration}=="CARD READER", ATTRS{product}=="USB3.0 Card Reader", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+
+#============
+# Kindle
+#============
+ATTRS{idVendor}=="1949", ATTRS{idProduct}=="0004", ATTRS{bcdDevice}=="0401", ATTRS{configuration}=="", ATTRS{product}=="Internal Storage", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+
+#==========
+# Bluetooth
+#=========
+ATTRS{idVendor}=="8087", ATTRS{idProduct}=="0026", ATTRS{bcdDevice}=="0002", ATTRS{configuration}=="", ENV{ID_USB_INTERFACES}==":e00101:", GOTO="wl_end"
+
+#===========
+# Personal Mouse
+#===========
+ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0084", ATTRS{bcdDevice}=="0000", ATTRS{configuration}=="", ATTRS{product}=="Basic Optical Mouse", ENV{ID_USB_INTERFACES}==":030102:", GOTO="wl_end"
+
+#==========
+# Sata Reader
+#==========
+ATTRS{idVendor}=="174c", ATTRS{idProduct}=="55aa", ATTRS{bcdDevice}=="0100", ATTRS{configuration}=="", ATTRS{product}=="ASMT105x", ENV{ID_USB_INTERFACES}==":080650:", GOTO="wl_end"
+
+#==========
+# Phone OnePlus
+#==========
+ATTRS{idVendor}=="05c6", ATTRS{idProduct}=="f000", ATTRS{bcdDevice}=="0419", ATTRS{configuration}=="", ATTRS{product}=="IN2020", ENV{ID_USB_INTERFACES}==":060101:080650:", GOTO="wl_end"
+ATTRS{idVendor}=="2a70", ATTRS{idProduct}=="4ee7", ATTRS{bcdDevice}=="0419", ATTRS{configuration}=="adb", ATTRS{product}=="IN2020", ENV{ID_USB_INTERFACES}==":ff4201:", MODE="0666", GROUP="plugdev", GOTO="wl_end"
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="4ee8", ATTRS{bcdDevice}=="0419", ATTRS{configuration}=="", ATTRS{product}=="OnePlus 8 Pro", ENV{ID_USB_INTERFACES}==":010100:010300:", GOTO="wl_end"
+ATTRS{idVendor}=="22d9", ATTRS{idProduct}=="2764", ATTRS{bcdDevice}=="0419", ATTRS{configuration}=="", ATTRS{product}=="OnePlus 8 Pro", ENV{ID_USB_INTERFACES}==":ffff00:", GOTO="wl_end"
+ATTRS{idVendor}=="22d9", ATTRS{idProduct}=="2771", ATTRS{bcdDevice}=="0419", ATTRS{configuration}=="", ATTRS{product}=="OnePlus 8 Pro", ENV{ID_USB_INTERFACES}==":060101:", GOTO="wl_end"
+
+#=======
+# Work Devices
+#=======
+ATTRS{idVendor}=="062a", ATTRS{idProduct}=="4189", ATTRS{bcdDevice}=="0102", ATTRS{configuration}=="", ATTRS{product}=="2.4G Keyboard Mouse", ENV{ID_USB_INTERFACES}==":030101:030102:", GOTO="wl_end"
+ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c05a", ATTRS{bcdDevice}=="5400", ATTRS{configuration}=="", ATTRS{product}=="USB Optical Mouse", ENV{ID_USB_INTERFACES}==":030102:", GOTO="wl_end"
+
+#=====
+# Temp devices
+#=====
+ATTRS{idVendor}=="174c", ATTRS{idProduct}=="55aa", ATTRS{bcdDevice}=="0100", ATTRS{configuration}=="", ATTRS{product}=="ASMT105x", ENV{ID_USB_INTERFACES}==":080650:080662:", GOTO="wl_end"
+
+#===============
+# end whitelist
+#===============
+
+# block any device not whitelisted
+ENV{DEVTYPE}=="usb_device", ENV{UDISKS_IGNORE}="1", ATTR{authorized}:="0", RUN+="/home/linux/apps/linux-script/udev-blocked $attr{idVendor} $attr{idProduct} iface:'%E{ID_USB_INTERFACES}'"
+#ENV{DEVTYPE}=="usb_device", ENV{UDISKS_IGNORE}="1", ATTR{authorized}:="0"
+
+LABEL="wl_end"
+

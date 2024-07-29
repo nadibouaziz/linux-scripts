@@ -1,0 +1,136 @@
+#!/bin/bash
+
+rulesonly="n"
+wlabel="wl_end"
+runcmd='/usr/local/sbin/udev-blocked $attr{idVendor} $attr{idProduct} iface:'\''%E{ID_USB_INTERFACES}'\'''
+
+function helpmsg
+{
+	echo "Usage: usb-whitelist OPTIONS..."
+	echo "  -r, --rules-only      only output rules generated, not the whole file"
+	echo "  -l, --label [name]    name of jump label (default \"wl_end\")"
+	echo "  -u, --run [cmd]       runs this command when a device is blocked"
+	echo "    (must escape '\"'!    default runs /usr/local/sbin/udev-blocked)"
+}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+	arg="$1"
+
+	case $arg in
+		-h|--help)
+			helpmsg
+			exit
+		;;
+		-r|--rules-only)
+			rulesonly="y"
+			shift
+		;;
+		-l|--label)
+			wlabel="$2"
+			shift
+			shift
+		;;
+		-u|--run)
+			runcmd="$2"
+			shift
+			shift
+		;;
+		*)
+			POSITIONAL+=("$1")
+			shift
+		;;
+	esac
+done
+set -- "${POSITIONAL[@]}"
+
+function usb_getattr
+{
+	local input=$1
+	local attr=$2
+
+	#echo "$input" | egrep -m 1 "ATTR{$attr}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+	echo "$input" | sed -E -n 's/^[[:space:]]*(ATTR\{'"$attr"'\}=="[^"]*")/\1/p'
+}
+
+function usb_getenv
+{
+	local input=$1
+	local name=$2
+
+	echo "$input" | sed -E -n 's/^E: '"$name"'=(.*)$/ENV{'"$name"'}=="\1"/p'
+}
+
+function combinelist
+{
+	local arr=("$@")
+
+	local i=0
+	local len=${#arr[@]}
+
+	for ((i = 0; i < $len; i++)); do
+		if [ -z "${arr[$i]}" ]; then
+			continue
+		fi
+
+		echo -n "${arr[$i]}"
+		if ! [ $i -eq $(($len - 1)) ]; then
+			echo -n ", "
+		fi
+	done
+}
+
+if [ "$rulesonly" = "n" ]; then
+	echo '# udev usb whitelist rules
+
+# skip
+SUBSYSTEM!="usb", GOTO="'$wlabel'"
+ACTION!="add", GOTO="'$wlabel'"
+
+# skip hubs
+ATTR{bDeviceClass}=="09", GOTO="'$wlabel'"
+
+#===========
+# whitelist
+#===========
+'
+fi
+
+usbdevices=$(lsusb | sed -E -n 's/^Bus ([0-9]{3}) Device ([0-9]{3}):.*$/\1\/\2/p')
+
+while read -r dev; do
+	wlist=()
+	devpath="/dev/bus/usb/$dev"
+
+	attributes=$(udevadm info -a $devpath)
+
+	wlist+=( "$(usb_getattr "$attributes" "idVendor")" )
+	wlist+=( "$(usb_getattr "$attributes" "idProduct")" )
+	wlist+=( "$(usb_getattr "$attributes" "bcdDevice")" )
+	wlist+=( "$(usb_getattr "$attributes" "configuration")" )
+	wlist+=( "$(usb_getattr "$attributes" "product")" )
+
+	evalues=$(udevadm info $devpath)
+
+	wlist+=( "$(usb_getenv "$evalues" "ID_USB_INTERFACES")" )
+
+	line=$(combinelist "${wlist[@]}")
+	line=$line', GOTO="'$wlabel'"'
+
+	line=$(echo "$line" | sed -E 's/ATTR(\{[A-Za-z]+\})/ATTRS\1/g')
+
+	echo $line
+done <<< "$usbdevices"
+
+if [ "$rulesonly" = "n" ]; then
+	echo '
+#===============
+# end whitelist
+#===============
+
+# block any device not whitelisted
+ENV{DEVTYPE}=="usb_device", ENV{UDISKS_IGNORE}="1", ATTR{authorized}:="0", RUN+="'$runcmd'"
+
+LABEL="'$wlabel'"
+'
+fi
