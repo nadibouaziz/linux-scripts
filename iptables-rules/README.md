@@ -16,7 +16,7 @@ exit 0
 EOF
 ```
 
-## Finally, add the permissions to execute the script:
+## Finally, add the permissions to execute the script
 
 ```bash
 chmod +x /etc/network/if-pre-up.d/iptablesload

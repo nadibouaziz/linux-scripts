@@ -1,6 +1,6 @@
 # Synchronise 2 USB folder
 
-### Install the new service and enable service
+## Install the new service and enable service
 
 1/ Copy the default service
 
