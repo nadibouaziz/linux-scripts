@@ -50,4 +50,8 @@ iptables -A INPUT -p tcp -d github.com --dport 22 -j ACCEPT
 iptables -A OUTPUT -p tcp -d gitlab.com --dport 22  -j ACCEPT
 iptables -A INPUT -p tcp -d gitlab.com --dport 22 -j ACCEPT
 
+#Allow default bridge docker network
+iptables -t filter -A INPUT -i docker0 -j ACCEPT
+iptables -t filter -A OUTPUT -o docker0 -j ACCEPT
+
 iptables-save > /etc/iptables_rules
